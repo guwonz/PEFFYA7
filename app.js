@@ -921,6 +921,7 @@ ${scaleQuestion(
   }, false);
 }
 
+
 async function submitData() {
   const payload = JSON.parse(JSON.stringify(state.surveyData));
 
@@ -948,20 +949,29 @@ async function submitData() {
     }
   );
 
+  // Check whether the HTTP request succeeded.
   if (!response.ok) {
-    const result = await response.json();
+    throw new Error(
+      `Submission request failed (HTTP ${response.status}).`
+    );
+  }
 
-if (!result.success) {
-  throw new Error(
-    result.error || "The server could not save your responses."
-  );
+  // Check whether Apps Script successfully saved the data.
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(
+      result.error || "The server could not save your responses."
+    );
+  }
+
+  return {
+    ok: true,
+    duplicate: result.duplicate === true,
+    submissionId: result.submissionId
+  };
 }
 
-return {
-  ok: true,
-  duplicate: result.duplicate === true,
-  submissionId: result.submissionId
-};
 
 function renderDebrief() {
   screen.innerHTML = `<h2>VI. Debriefing</h2>
