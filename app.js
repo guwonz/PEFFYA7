@@ -31,7 +31,7 @@ let state = {
 };
 
 const SCREEN_ORDER = [
-  "consent", "screening", "baseline", "flanker", "participant",
+  "consent", "participant", "screening", "baseline", "flanker",
   "demographics", "politicalFollowing", "posts", "debrief", "raffle"
 ];
 
@@ -68,7 +68,7 @@ function syncAndAutosave() {
     const val = document.querySelector('input[name="consent"]:checked')?.value;
     if (val) state.surveyData.consent = (val === "yes");
   } else if (state.currentScreen === "screening") {
-    const names = ["youngAdult", "taglish", "activeSocialMedia", "usesX", "politicalAwareness"];
+    const names = ["youngAdult", "taglish", "politicalAwareness"];
     names.forEach(n => {
       const val = document.querySelector(`input[name="${n}"]:checked`)?.value;
       if (val) state.surveyData.screening[n] = val;
@@ -85,17 +85,45 @@ function syncAndAutosave() {
   } else if (state.currentScreen === "participant") {
     const code = document.getElementById("participantCode")?.value.trim();
     if (code !== undefined) state.surveyData.participantCode = code;
-  } else if (state.currentScreen === "demographics") {
-    const age = document.getElementById("age")?.value;
-    const sex = document.querySelector('input[name="sexAtBirth"]:checked')?.value;
-    const edu = document.querySelector('input[name="education"]:checked')?.value;
-    const emp = document.querySelector('input[name="employment"]:checked')?.value;
-    const inc = document.querySelector('input[name="income"]:checked')?.value;
-    if (age) state.surveyData.demographics.age = age;
-    if (sex) state.surveyData.demographics.sexAtBirth = sex;
-    if (edu) state.surveyData.demographics.education = edu;
-    if (emp) state.surveyData.demographics.employment = emp;
-    if (inc) state.surveyData.demographics.income = inc;
+  
+} else if (state.currentScreen === "demographics") {
+  const age = document.getElementById("age")?.value;
+  const sex = document.querySelector('input[name="sexAtBirth"]:checked')?.value;
+  const edu = document.querySelector('input[name="education"]:checked')?.value;
+  const emp = document.querySelector('input[name="employment"]:checked')?.value;
+  const inc = document.querySelector('input[name="income"]:checked')?.value;
+
+  const onlineActivity = Array.from(
+    document.querySelectorAll('input[name="onlineActivity"]:checked')
+  ).map(input => input.value);
+
+  const weeklyUse = document.querySelector(
+    'input[name="weeklySocialMediaUse"]:checked'
+  )?.value || "";
+
+  const activeHours =
+    document.getElementById("activeSocialMediaHours")?.value.trim() || "";
+
+  const topPlatforms = Array.from(
+    document.querySelectorAll('input[name="topPlatforms"]:checked')
+  ).map(input => input.value);
+
+  const otherPlatform =
+    document.getElementById("otherPlatform")?.value.trim() || "";
+
+  state.surveyData.demographics = {
+    ...state.surveyData.demographics,
+    age: age || "",
+    sexAtBirth: sex || "",
+    education: edu || "",
+    employment: emp || "",
+    income: inc || "",
+    onlineActivity,
+    weeklySocialMediaUse: weeklyUse,
+    activeSocialMediaHours: activeHours,
+    topPlatforms,
+    otherPlatform
+  };
   } else if (state.currentScreen === "politicalFollowing") {
     const label = document.querySelector('input[name="politicalFollowing"]:checked')?.value;
     if (label) {
@@ -500,7 +528,7 @@ function renderConsent() {
     }
 
     state.surveyData.consent = true;
-    setScreen("screening");
+    setScreen("participant");
   }, false);
 }
 
@@ -512,31 +540,48 @@ function yesNo(name, label, current = "") {
     </div></div>`;
 }
 
+
 function renderScreening() {
   const s = state.surveyData.screening || {};
+
   screen.innerHTML = `<h2>I. Screening Questions</h2>
     ${yesNo("youngAdult", "Are you part of the young adult age group (i.e., within the ages 18 to 29)?", s.youngAdult)}
     ${yesNo("taglish", "Do you understand Taglish (i.e., both English and Tagalog)?", s.taglish)}
-    ${yesNo("activeSocialMedia", "Are you active on social media (i.e., daily usage or 5 times a week)?", s.activeSocialMedia)}
-    ${yesNo("usesX", "Do you use X (formerly Twitter) (i.e., scrolling and/or posting)?", s.usesX)}
     ${yesNo("politicalAwareness", "Are you aware of the political situation of/within the Philippines?", s.politicalAwareness)}
     <div id="screening-error" class="error hidden">Please answer all screening questions.</div>
     ${actions({ nextLabel: "Continue" })}`;
 
   bindActions(() => {
-    const names = ["youngAdult", "taglish", "activeSocialMedia", "usesX", "politicalAwareness"];
-    const values = Object.fromEntries(names.map(n => [n, document.querySelector(`input[name="${n}"]:checked`)?.value]));
-    if (Object.values(values).some(v => !v)) { document.getElementById("screening-error").classList.remove("hidden"); return; }
+    const names = ["youngAdult", "taglish", "politicalAwareness"];
+
+    const values = Object.fromEntries(
+      names.map(n => [
+        n,
+        document.querySelector(`input[name="${n}"]:checked`)?.value
+      ])
+    );
+
+    if (Object.values(values).some(v => !v)) {
+      document.getElementById("screening-error")
+        .classList.remove("hidden");
+      return;
+    }
+
     state.surveyData.screening = values;
     saveProgress();
 
     if (Object.values(values).some(v => v === "no")) {
       clearProgress();
-      screen.innerHTML = `<div class="center"><h2>Thank you for your time.</h2><p>Based on your responses, you are not eligible to continue with this study.</p></div>`;
+      screen.innerHTML = `
+        <div class="center">
+          <h2>Thank you for your time.</h2>
+          <p>Based on your responses, you are not eligible to continue with this study.</p>
+        </div>`;
       progressBar.style.width = "100%";
       progressPercent.textContent = "100%";
       return;
     }
+
     setScreen("baseline");
   });
 }
@@ -706,7 +751,7 @@ function renderFlanker() {
       accuracy
     };
 
-    setScreen("participant");
+    setScreen("demographics");
   });
 }
 
@@ -756,29 +801,250 @@ function renderParticipant() {
     }
 
     state.surveyData.participantCode = code;
-    setScreen("demographics");
+    setScreen("screening");
   });
 }
 
+
 function renderDemographics() {
-  const d = state.surveyData.demographics;
-  screen.innerHTML = `<h2>IV. Demographic Profile</h2>
-    <div class="question"><label class="question-label required" for="age">Age</label>
-      <select id="age"><option value="">Select</option>${Array.from({length:12}, (_,i) => 18+i).map(v => `<option value="${v}" ${String(d.age)===String(v)?"selected":""}>${v}</option>`).join("")}</select></div>
+  const d = state.surveyData.demographics || {};
+
+  const activityOptions = [
+    {
+      value: "Active Social Use",
+      description: "Directly communicating or building social connections. Includes writing posts, replying to comments, sending direct messages, and starting live streams."
+    },
+    {
+      value: "Active Non-Social or Reactive Use",
+      description: 'Engaging with content without generating new material. Includes "liking" posts, sharing/retweeting, clicking vote buttons, or tagging friends.'
+    },
+    {
+      value: "Passive Use",
+      description: "Observing or consuming content silently. Includes scrolling feeds, viewing stories, or reading comments without leaving any digital footprint."
+    }
+  ];
+
+  const platformOptions = [
+    "Facebook",
+    "Instagram",
+    "YouTube",
+    "TikTok",
+    "Reddit",
+    "X (formerly Twitter)",
+    "Other"
+  ];
+
+  const savedActivities = Array.isArray(d.onlineActivity)
+    ? d.onlineActivity
+    : [];
+
+  const savedPlatforms = Array.isArray(d.topPlatforms)
+    ? d.topPlatforms
+    : [];
+
+  screen.innerHTML = `
+    <h2>IV. Demographic Profile</h2>
+
+    <div class="question">
+      <label class="question-label required" for="age">Age</label>
+      <select id="age">
+        <option value="">Select</option>
+        ${Array.from({ length: 12 }, (_, i) => 18 + i)
+          .map(v => `<option value="${v}" ${String(d.age) === String(v) ? "selected" : ""}>${v}</option>`)
+          .join("")}
+      </select>
+    </div>
+
     ${selectQuestion("sexAtBirth", "Sex at Birth", ["Female", "Male", "Others"], d.sexAtBirth)}
-    ${selectQuestion("education", "What is the highest level of education you have completed?", ["Elementary school / Primary school", "High school graduate", "Vocational / Trade school", "College undergraduate", "Bachelor's degree / College graduate", "Post-graduate degree (Master's, Doctorate)"], d.education)}
-    ${selectQuestion("employment", "What is your current employment status?", ["Student", "Employed full-time", "Employed part-time", "Self-employed", "Unemployed", "Retired"], d.employment)}
-    ${selectQuestion("income", "What is your estimated monthly household income?", ["Below ₱10,001", "₱10,001 – ₱20,000", "₱20,001 – ₱40,000", "₱40,001 – ₱75,000", "₱75,001 – ₱125,000", "₱125,001 – ₱250,000", "₱250,001 and above"], d.income)}
-    <div id="demographics-error" class="error hidden">Please complete all demographic questions.</div>
-    ${actions({ nextLabel: "Continue" })}`;
+
+    ${selectQuestion(
+      "education",
+      "What is the highest level of education you have completed?",
+      [
+        "Elementary school / Primary school",
+        "High school graduate",
+        "Vocational / Trade school",
+        "College undergraduate",
+        "Bachelor's degree / College graduate",
+        "Post-graduate degree (Master's, Doctorate)"
+      ],
+      d.education
+    )}
+
+    ${selectQuestion(
+      "employment",
+      "What is your current employment status?",
+      [
+        "Student",
+        "Employed full-time",
+        "Employed part-time",
+        "Self-employed",
+        "Unemployed",
+        "Retired"
+      ],
+      d.employment
+    )}
+
+    ${selectQuestion(
+      "income",
+      "What is your estimated monthly household income?",
+      [
+        "Below ₱10,001",
+        "₱10,001 – ₱20,000",
+        "₱20,001 – ₱40,000",
+        "₱40,001 – ₱75,000",
+        "₱75,001 – ₱125,000",
+        "₱125,001 – ₱250,000",
+        "₱250,001 and above"
+      ],
+      d.income
+    )}
+
+    <div class="question">
+      <span class="question-label required">
+        How would you describe your online activity? (Check all that apply)
+      </span>
+
+      <div class="option-list">
+        ${activityOptions.map(option => `
+          <label class="option" style="align-items: flex-start;">
+            <input
+              type="checkbox"
+              name="onlineActivity"
+              value="${escapeHtml(option.value)}"
+              ${savedActivities.includes(option.value) ? "checked" : ""}
+            >
+            <span>
+              <strong>${escapeHtml(option.value)}</strong><br>
+              <span class="small">${escapeHtml(option.description)}</span>
+            </span>
+          </label>
+        `).join("")}
+      </div>
+    </div>
+
+    ${selectQuestion(
+      "weeklySocialMediaUse",
+      "How often in a week do you use social media?",
+      [
+        "Rarely (0-1 days a week)",
+        "Occasionally (2-3 days a week)",
+        "Moderately (4-5 days a week)",
+        "Daily (6-7 days a week)"
+        
+      ],
+      d.weeklySocialMediaUse
+    )}
+
+    <div class="question">
+      <label class="question-label required" for="activeSocialMediaHours">
+        On a typical day, approximately how many hours do you spend actively using social media? (e.g., 6 hours)
+      </label>
+      <input
+        id="activeSocialMediaHours"
+        type="text"
+        value="${escapeHtml(d.activeSocialMediaHours || "")}"
+        placeholder="e.g., 6 hours"
+      >
+    </div>
+
+    <div class="question">
+      <span class="question-label required">
+        Which social media platform/s do you use most frequently?
+      </span>
+
+      <div class="option-list">
+        ${platformOptions.map(platform => `
+          <label class="option">
+            <input
+              type="checkbox"
+              name="topPlatforms"
+              value="${escapeHtml(platform)}"
+              ${savedPlatforms.includes(platform) ? "checked" : ""}
+            >
+            ${platform === "Other"
+              ? "Other"
+              : escapeHtml(platform)}
+          </label>
+        `).join("")}
+      </div>
+
+      <label class="question-label" for="otherPlatform">
+        If you selected Other, please specify:
+      </label>
+      <input
+        id="otherPlatform"
+        type="text"
+        value="${escapeHtml(d.otherPlatform || "")}"
+        placeholder="Enter another platform"
+      >
+    </div>
+
+    <div id="demographics-error" class="error hidden">
+      Please complete all demographic questions. Select at least one online
+      activity and at least one social media platform. If you selected "Other", please specify it.
+    </div>
+
+    ${actions({ nextLabel: "Continue" })}
+  `;
+
   bindActions(() => {
     const age = document.getElementById("age").value;
     const sexAtBirth = document.querySelector('input[name="sexAtBirth"]:checked')?.value;
     const education = document.querySelector('input[name="education"]:checked')?.value;
     const employment = document.querySelector('input[name="employment"]:checked')?.value;
     const income = document.querySelector('input[name="income"]:checked')?.value;
-    if (!age || !sexAtBirth || !education || !employment || !income) { document.getElementById("demographics-error").classList.remove("hidden"); return; }
-    state.surveyData.demographics = { age, sexAtBirth, education, employment, income };
+
+    const onlineActivity = Array.from(
+      document.querySelectorAll('input[name="onlineActivity"]:checked')
+    ).map(input => input.value);
+
+    const weeklySocialMediaUse = document.querySelector(
+      'input[name="weeklySocialMediaUse"]:checked'
+    )?.value;
+
+    const activeSocialMediaHours =
+      document.getElementById("activeSocialMediaHours").value.trim();
+
+    const topPlatforms = Array.from(
+      document.querySelectorAll('input[name="topPlatforms"]:checked')
+    ).map(input => input.value);
+
+    const otherPlatform =
+      document.getElementById("otherPlatform").value.trim();
+
+    const valid =
+      age &&
+      sexAtBirth &&
+      education &&
+      employment &&
+      income &&
+      onlineActivity.length > 0 &&
+      weeklySocialMediaUse &&
+      activeSocialMediaHours &&
+      topPlatforms.length >= 1 &&
+      (!topPlatforms.includes("Other") || otherPlatform);
+
+    if (!valid) {
+      document.getElementById("demographics-error")
+        .classList.remove("hidden");
+      return;
+    }
+
+    state.surveyData.demographics = {
+      age,
+      sexAtBirth,
+      education,
+      employment,
+      income,
+      onlineActivity,
+      weeklySocialMediaUse,
+      activeSocialMediaHours,
+      topPlatforms,
+      otherPlatform
+    };
+
+    saveProgress();
     setScreen("politicalFollowing");
   });
 }

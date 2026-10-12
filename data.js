@@ -5,7 +5,7 @@ const STUDY_CONFIG = {
   title: "Political Engagement on Social Media of Filipino Young Adults",
 
   assessmentUrl: "https://www.adhdfocuspro.com/en/modules/flanker",
-  submissionEndpoint: "https://script.google.com/macros/s/AKfycbzmFhZBozSCs4wsrpEuEfJYXS9NY0k58RgpFk71YESs-2UMpIqQZ-7lhDhLtmwufMan/exec",
+  submissionEndpoint: "https://script.google.com/macros/s/AKfycbzx6eHgbLi-GHCXM4ubIb6NmSA491GtB-mJgQF3iG87sLs1OLEXVRS6_mW00zaPPOhZ/exec",
 
   raffleEndpoint: "",
 
