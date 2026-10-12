@@ -315,7 +315,7 @@ function renderConsent() {
         There are no direct benefits or guaranteed compensation for
         participating. However, participants will have the opportunity
         to enter a raffle, in which
-        <strong>three (3) participants will each receive ₱300</strong>
+        <strong>four (4) participants will each receive ₱250</strong>
         as a token of appreciation. The research group hopes that the contributions of this study
         may help advance progress within the field and inform future
         research.
@@ -518,7 +518,7 @@ function renderScreening() {
     ${yesNo("youngAdult", "Are you part of the young adult age group (i.e., within the ages 18 to 29)?", s.youngAdult)}
     ${yesNo("taglish", "Do you understand Taglish (i.e., both English and Tagalog)?", s.taglish)}
     ${yesNo("activeSocialMedia", "Are you active on social media (i.e., daily usage or 5 times a week)?", s.activeSocialMedia)}
-    ${yesNo("usesX", "Do you use X (formerly Twitter)?", s.usesX)}
+    ${yesNo("usesX", "Do you use X (formerly Twitter) (i.e., scrolling and/or posting)?", s.usesX)}
     ${yesNo("politicalAwareness", "Are you aware of the political situation of/within the Philippines?", s.politicalAwareness)}
     <div id="screening-error" class="error hidden">Please answer all screening questions.</div>
     ${actions({ nextLabel: "Continue" })}`;
@@ -725,8 +725,8 @@ function renderParticipant() {
         Participant Code
         <br>
         <em style="font-size: 0.85em; font-weight: normal;">
-          Please input the <i>first three letters of the street where you reside</i>
-          and the <i>last 3 digits of your contact number</i>
+          Please input the <i>first three (3) letters of the street where you reside</i>
+          and the <i>last three (3) digits of your contact number</i>
           (e.g., <strong>18T138</strong> or <strong>IME299</strong>).
         </em>
       </label>
@@ -1023,8 +1023,8 @@ function renderRaffle() {
 
     <p>
       Thank you for your participation! As a token of our appreciation,
-      we are holding a raffle where three (3) lucky participants will win
-      ₱300 each via GCash.
+      we are holding a raffle where four (4) lucky participants will win
+      ₱250 each via GCash.
     </p>
 
     <p>
