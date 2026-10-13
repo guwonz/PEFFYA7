@@ -864,7 +864,6 @@ function renderDemographics() {
         "Elementary school / Primary school",
         "High school graduate",
         "Vocational / Trade school",
-        "College undergraduate",
         "Bachelor's degree / College graduate",
         "Post-graduate degree (Master's, Doctorate)"
       ],
